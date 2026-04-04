@@ -1,0 +1,3 @@
+
+void InitializeDisplay();
+void TickDisplay();
