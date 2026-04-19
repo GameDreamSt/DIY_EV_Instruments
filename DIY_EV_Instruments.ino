@@ -9,13 +9,11 @@
 #include "src/Gauge.h"
 #include "src/Pinout.h"
 #include "src/CANCommunication.h"
+#include "src/Audio.h"
 
 #include "FS.h"
 #include <LittleFS.h>
 #include "src/FileUtility.h"
-
-#include "src/Audio/PDMOutput.h"
-#include "src/WAV/WAVFileReader.h"
 
 #define FORMAT_LITTLEFS_IF_FAILED true
 
@@ -24,9 +22,6 @@ Timer gaugeTimer = Timer(1);
 bool ledsActive;
 
 Gauge tachGauge, coolantGauge, fuelGauge;
-
-AudioOutput *audioOutput = NULL;
-WAVFileReader *wavFileReader = NULL;
 
 void setup()
 {
@@ -52,12 +47,6 @@ void setup()
     fuelGauge = Gauge(PIN_FUEL_GAUGE, CHANNEL_FUEL);
     fuelGauge.SetCalibration(CHANNEL_MAX_FUEL);
 
-    i2s_pin_config_t i2s_pdm_pins = {.bck_io_num = I2S_PIN_NO_CHANGE,
-                                     .ws_io_num = I2S_PIN_NO_CHANGE,
-                                     .data_out_num = PIN_AUDIO,
-                                     .data_in_num = I2S_PIN_NO_CHANGE};
-    audioOutput = new PDMOutput(i2s_pdm_pins);
-
     if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED))
     {
         Serial.println("LittleFS Mount Failed");
@@ -65,19 +54,6 @@ void setup()
     }
 
     ListDirectory("/");
-
-    File fp = LittleFS.open("/chime.wav", "r");
-
-    if (!fp)
-    {
-        Serial.println("Failed to open file for reading");
-        return;
-    }
-
-    wavFileReader = new WAVFileReader(&fp);
-
-    if (!wavFileReader->IsValid())
-        return;
 }
 
 void loop()
@@ -123,43 +99,4 @@ void TickGauges()
         fuelGauge.SetCalibration(value);
     if (commands::TryGetGaugeValueRatio(CHANNEL_FUEL, value))
         fuelGauge.SetValueRatio(value);
-}
-
-void TickAudio()
-{
-    if (!commands::TriggerChime())
-        return;
-
-    if (wavFileReader == nullptr)
-    {
-        PrintSerialMessage("WAV reader is null!");
-        return;
-    }
-
-    uint8_t *sampleData = wavFileReader->GetSamples();
-    int sampleBytes = wavFileReader->GetSampleCount();
-
-    if (sampleData == nullptr || sampleBytes <= 0)
-    {
-        PrintSerialMessage("No samples available to play!");
-        return;
-    }
-
-    if (audioOutput == nullptr)
-    {
-        PrintSerialMessage("Audio player is null!");
-        return;
-    }
-
-    int16_t *samples = (int16_t *)sampleData;
-    int sampleCount = sampleBytes / sizeof(int16_t);
-
-    Serial.printf("Playing %d samples\n", sampleCount);
-    int timeStart = millis();
-
-    audioOutput->start(wavFileReader->GetSampleRate());
-    audioOutput->write(samples, sampleCount);
-    audioOutput->stop();
-
-    Serial.printf("Done. Took %d ms", millis() - timeStart);
 }
