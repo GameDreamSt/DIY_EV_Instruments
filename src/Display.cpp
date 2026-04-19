@@ -20,8 +20,9 @@ using namespace std;
 
 int displayWidth;
 int displayHeight;
+bool initialized;
 
-Adafruit_ST7789 tft = Adafruit_ST7789(&SPI, PIN_CS_TOGGLE, PIN_DC_DISPLAY, -1);
+Adafruit_ST7789 tft = Adafruit_ST7789(&SPI, PIN_DISPLAY_CS, PIN_DISPLAY_DC, -1);
 
 // color definitions
 const uint16_t Display_Color_Black = ST77XX_BLACK;
@@ -293,7 +294,7 @@ void InitializeDisplay()
     // SPI speed defaults to SPI_DEFAULT_FREQ defined in the library, you can override it here
     // Note that speed allowable depends on chip and quality of wiring, if you go too fast, you
     // may end up with a black screen some times, or all the time.
-    // tft.setSPISpeed(40000000);
+    tft.setSPISpeed(10000000);
 
     tft.setFont(&FreeSans12pt7b);
     tft.fillScreen(Display_Backround_Color);
@@ -313,6 +314,13 @@ void InitializeDisplay()
 
 void TickDisplay()
 {
+    if(!initialized)
+    {
+        initialized = true;
+        InitializeDisplay();
+        return;
+    }
+
     switch (currentState)
     {
     case State::DisplaySetup:

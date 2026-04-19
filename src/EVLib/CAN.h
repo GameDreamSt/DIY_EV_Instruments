@@ -10,9 +10,10 @@ class CAN
     MCP2515 *mcp2515;
 
   public:
-    static bool printReceive;
+    static bool logCAN;
+    static bool printErrors;
 
-    CAN(int chipSelectPin, int interruptPin);
+    CAN(int chipSelectPin);
     ~CAN();
 
     void Transmit(can_frame canFrame);

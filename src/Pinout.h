@@ -1,5 +1,5 @@
 
-// Using ESP32-C3 super mini
+// Using ESP32
 
 #define VCCVoltage 3.3f
 #define ANALOG_RES 12
@@ -20,19 +20,36 @@
 // High beams, Turn signals LEDs are controlled from the car. (By using optocouplers)
 
 // Pins:
-#define PIN_TACH 0 // 0 A0
-#define PIN_COOLANT_LED 1 // 1 A1
-#define PIN_COOLANT_GAUGE 2 // 2 A2 STRAPPING must and will be high on boot 10KOhm
-#define PIN_AUDIO 3 // 3 A3
-// RESERVED 4 A4 SPI_SCK
-// RESERVED 5 A5 SPI_SO
-// RESERVED 6 SPI_SI
+// G36 ADC INPUT ONLY
+// G39 ADC INPUT ONLY
+// G34 ADC INPUT ONLY
+// G35 ADC INPUT ONLY
+#define PIN_TACH 32 // ADC
+#define PIN_COOLANT_GAUGE 33 // ADC
+#define PIN_FUEL_GAUGE 25 // ADC
+#define PIN_AUDIO 26 // ADC
+// G27 ADC
+// G14 ADC JTAG
+// G12 ADC STRAPPING PD FLASH BOOT
+// G13 ADC JTAG
+// G09 ADC SD Data RX1 FLASH
+// G10 ADC SD Data TX1 FLASH
+// G11 ADC SD CMD FLASH
 
-// Multiplexed display and CAN chip select with NOT logic. When display is high(deactivated) the CAN will be low(active) and vice versa
-#define PIN_CS_TOGGLE 7 // 7 SPI_SS
-
-#define PIN_FUEL_GAUGE 8 // 8 I2C-SDA STRAPPING BUILT_IN_LED must and will be high on boot 10KOhm
-#define PIN_DC_DISPLAY 9 // 9 I2C-SCL STRAPPING will be high on boot 10KOhm
-#define PIN_BATTERY_LED 10 // 10
-// Need for debug 20 RX
-// Need for debug 21 TX
+// G23 SPI MOSI
+// G22 I2C CLK
+// G01 TX0 USB CONSOLE
+// G03 RX0 USB CONSOLE
+// G21 I2C DATA
+// G19 SPI MISO
+// G18 SPI SCK
+#define PIN_CAN_CS 5 // SPI SS/CS STRAPPING BOOT SDIO SLAVE
+// G17 TX2 FLASH
+// G16 RX2 FLASH
+#define PIN_DISPLAY_DC 4 // ADC STRAPPING BOOT CONFIG
+#define PIN_DISPLAY_CS 0 // ADC STRAPPING BOOT
+#define PIN_COOLANT_LED 2 // ADC STRAPPING RESET
+#define PIN_BATTERY_LED 15 // ADC STRAPPING BOOT PU
+// G08 SD Data FLASH
+// G07 SD Data FLASH
+// G31 SD CLK

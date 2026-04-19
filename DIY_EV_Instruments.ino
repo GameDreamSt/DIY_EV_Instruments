@@ -8,9 +8,11 @@
 #include "src/Display.h"
 #include "src/Gauge.h"
 #include "src/Pinout.h"
+#include "src/CANCommunication.h"
 
 #include "FS.h"
 #include <LittleFS.h>
+#include "src/FileUtility.h"
 
 #include "src/Audio/PDMOutput.h"
 #include "src/WAV/WAVFileReader.h"
@@ -35,8 +37,8 @@ void setup()
     AddCommand(CommandPointer("setgaugevalue", commands::CommandGaugeValueRatio));
     AddCommand(CommandPointer("playchime", commands::CommandTriggerChime));
     AddCommand(CommandPointer("reset", commands::CommandReset));
-
-    InitializeDisplay();
+    AddCommand(CommandPointer("canerrors", commands::CommandTogglePrintCANErrors));
+    AddCommand(CommandPointer("canlogs", commands::CommandTogglePrintCANLogs));
 
     pinMode(PIN_COOLANT_LED, OUTPUT);
     pinMode(PIN_BATTERY_LED, OUTPUT);
@@ -62,7 +64,7 @@ void setup()
         return;
     }
 
-    listDir("/", 1);
+    ListDirectory("/");
 
     File fp = LittleFS.open("/chime.wav", "r");
 
@@ -80,6 +82,7 @@ void setup()
 
 void loop()
 {
+    TickCAN();
     TickTime();
     TickSerialReader();
     TickSerialWriter();
@@ -159,43 +162,4 @@ void TickAudio()
     audioOutput->stop();
 
     Serial.printf("Done. Took %d ms", millis() - timeStart);
-}
-
-void listDir(const char *dirname, uint8_t levels)
-{
-    Serial.printf("Listing directory: %s\r\n", dirname);
-
-    File root = LittleFS.open(dirname);
-    if (!root)
-    {
-        Serial.println("- failed to open directory");
-        return;
-    }
-    if (!root.isDirectory())
-    {
-        Serial.println(" - not a directory");
-        return;
-    }
-
-    File file = root.openNextFile();
-    while (file)
-    {
-        if (file.isDirectory())
-        {
-            Serial.print("  DIR : ");
-            Serial.println(file.name());
-            if (levels)
-            {
-                listDir(file.path(), levels - 1);
-            }
-        }
-        else
-        {
-            Serial.print("  FILE: ");
-            Serial.print(file.name());
-            Serial.print("\tSIZE: ");
-            Serial.println(file.size());
-        }
-        file = root.openNextFile();
-    }
 }

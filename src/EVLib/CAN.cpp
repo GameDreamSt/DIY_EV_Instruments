@@ -1,16 +1,17 @@
 
 #include "CAN.h"
 #include "SerialPrint.h"
-#include "mcp2515.h" // autowp-mcp2515
+#include "CAN/mcp2515.h" // from autowp-mcp2515
 
 #include <SPI.h>
 #include <string>
 
 using namespace std;
 
-bool CAN::printReceive = false;
+bool CAN::logCAN = false;
+bool CAN::printErrors = false;
 
-CAN::CAN(int chipSelectPin, int interruptPin)
+CAN::CAN(int chipSelectPin)
 {
     mcp2515 = new MCP2515(chipSelectPin);
 
@@ -57,11 +58,12 @@ bool CAN::GetCanData(can_frame &output)
 
     if (errFlag != MCP2515::ERROR_OK || output.can_id == 0 || output.can_dlc == 0)
     {
-        // PrintSerialMessage("CAN error! " + ErrToStr(errFlag));
+        if(CAN::printErrors)
+            PrintSerialMessage("CAN error! " + ErrToStr(errFlag));
         return false;
     }
 
-    if (CAN::printReceive)
+    if (CAN::logCAN)
         PrintSerialMessage("Got CAN MSG ID: 0x" + IntToHex(output.can_id) + " Bytes: " + BytesToString(output.data, output.can_dlc));
 
     return true;
@@ -73,7 +75,8 @@ void CAN::Transmit(can_frame canFrame)
 }
 void CAN::Transmit(int ID, uint8_t length, uint8_t *data)
 {
-    // PrintSerialMessage("Sending 0x" + IntToHex(ID) + " Size:"+ToString(length) + " Data:" + BytesToString(data, length));
+    if (CAN::logCAN)
+    PrintSerialMessage("Sending 0x" + IntToHex(ID) + " Size:"+ToString(length) + " Data:" + BytesToString(data, length));
     can_frame tempFrame;
     tempFrame.can_id = ID;
     tempFrame.can_dlc = length;

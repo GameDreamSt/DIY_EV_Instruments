@@ -11,4 +11,6 @@ namespace commands
     bool TriggerChime();
 
     void CommandReset();
+    void CommandTogglePrintCANErrors();
+    void CommandTogglePrintCANLogs();
 }

@@ -2,6 +2,7 @@
 #include "Commands.h"
 #include "EVLib/SerialReader.h"
 #include "EVLib/SerialPrint.h"
+#include "EVLib/Can.h"
 
 using namespace std;
 
@@ -90,5 +91,16 @@ namespace commands
     void CommandReset()
     {
         Reset();
+    }
+
+    void CommandTogglePrintCANErrors()
+    {
+        CAN::printErrors = !CAN::printErrors;
+    }
+
+    void CommandTogglePrintCANLogs()
+    {
+        CAN::logCAN = !CAN::logCAN;
+        PrintSerialMessage(CAN::logCAN ? "CAN debug enabled" : "CAN debug disabled");
     }
 }
