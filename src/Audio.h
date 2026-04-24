@@ -1,2 +1,3 @@
 
+void InitializeAudio();
 void TickAudio();

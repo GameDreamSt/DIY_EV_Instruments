@@ -54,6 +54,8 @@ void setup()
     }
 
     ListDirectory("/");
+
+    InitializeAudio();
 }
 
 void loop()

@@ -13,10 +13,13 @@
 AudioOutput *audioOutput = NULL;
 WAVFileReader *wavFileReader = NULL;
 
-bool audioInitialized;
-
-void Initialize()
+void InitializeAudio()
 {
+    i2s_pin_config_t i2s_pdm_pins = {.bck_io_num = I2S_PIN_NO_CHANGE,
+                                     .ws_io_num = I2S_PIN_NO_CHANGE,
+                                     .data_out_num = PIN_AUDIO,
+                                     .data_in_num = I2S_PIN_NO_CHANGE};
+
     File fp = LittleFS.open("/chime.wav", "r");
 
     if (!fp)
@@ -30,32 +33,16 @@ void Initialize()
     if(!wavFileReader->IsValid())
         return;
 
-    i2s_pin_config_t i2s_pdm_pins = {.bck_io_num = I2S_PIN_NO_CHANGE,
-                                     .ws_io_num = I2S_PIN_NO_CHANGE,
-                                     .data_out_num = PIN_AUDIO,
-                                     .data_in_num = I2S_PIN_NO_CHANGE};
     audioOutput = new PDMOutput(i2s_pdm_pins);
 }
 
 void TickAudio()
 {
-    if(!audioInitialized)
-    {
-        audioInitialized = true;
-        return;
-    }
-
-    if(!wavFileReader->IsValid())
+    if(wavFileReader == nullptr || !wavFileReader->IsValid())
         return;
 
     if (!commands::TriggerChime())
         return;
-
-    if (wavFileReader == nullptr)
-    {
-        PrintSerialMessage("WAV reader is null!");
-        return;
-    }
 
     uint8_t *sampleData = wavFileReader->GetSamples();
     int sampleBytes = wavFileReader->GetSampleCount();
