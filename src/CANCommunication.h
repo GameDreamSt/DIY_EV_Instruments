@@ -23,7 +23,7 @@ struct EVData
     float tripWhPerKm;
     float totalWhPerKm;
 
-    float chargeTimeLeft;
+    float chargeTimePassed;
     float chargeTimeRemaining;
     float chargeWattage;
 
