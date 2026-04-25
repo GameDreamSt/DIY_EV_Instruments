@@ -145,3 +145,63 @@ struct Label
         Draw();
     }
 };
+
+struct Sprite
+{
+private:
+    string path;
+public:
+    Rect rect;
+
+    Sprite(string path) : rect(0, 0, 0, 0, Anchor::MiddleCenter), path(path) {}
+
+    bool Draw()
+    {
+        File fp = LittleFS.open(path.c_str(), "r");
+
+        if (!fp)
+        {
+            PrintSerialMessage("Can't display sprite, '" + path + "' is missing!");
+            return false;
+        }
+
+        size_t availableBytes = fp.available();
+
+        if (availableBytes == 0)
+        {
+            PrintSerialMessage("Can't display sprite, 0 bytes!");
+            fp.close();
+            return false;
+        }
+
+        size_t bytesLeftInRam = ESP.getFreeHeap();
+        if (availableBytes >= bytesLeftInRam)
+        {
+            PrintSerialMessage("Can't display sprite, not enough memory! Left:" + ToString(bytesLeftInRam) +
+                            ", needed: " + ToString(availableBytes));
+            fp.close();
+            return false;
+        }
+
+        uint32_t width, height;
+        fp.read((uint8_t *)&width, sizeof(uint32_t));
+        fp.read((uint8_t *)&height, sizeof(uint32_t));
+
+        availableBytes = fp.available();
+        uint16_t *RGB565Data = new uint16_t[availableBytes / sizeof(uint16_t)];
+        fp.read((uint8_t *)RGB565Data, availableBytes);
+        fp.close();
+
+        PrintSerialMessage("Sprite '" + path + "' is: " + ToString((size_t)width) + "x" + ToString((size_t)height));
+
+        rect.elementWidth = width;
+        rect.elementHeight = height;
+
+        int x, y;
+        rect.GetTransformedValues(x, y);
+        tft.drawRGBBitmap(x, y, RGB565Data, width, height);
+
+        delete RGB565Data;
+        return true;
+    }
+};

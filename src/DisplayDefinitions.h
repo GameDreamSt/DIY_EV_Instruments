@@ -24,23 +24,36 @@ Label tractionBatteryVoltageLabel;
 Label tractionBatterySOCLabel;
 Label tractionBatteryCapacityLabel;
 
+Sprite ambientTempIcon = Sprite("/Ambient_Temp_Icon.RGB565");
+Sprite auxBatteryIcon = Sprite("/Battery_Icon.RGB565");
+Sprite chargeIcon = Sprite("/Charge_Icon.RGB565");
+Sprite coolantIcon = Sprite("/Coolant_Icon.RGB565");
+Sprite fuelIcon = Sprite("/Fuel_Icon.RGB565");
+Sprite logoIcon = Sprite("/Logo.RGB565");
+Sprite tractionBatteryIcon = Sprite("/Traction_Battery_Icon.RGB565");
+
+Sprite arrowUp = Sprite("/Arrow_Up.RGB565");
+Sprite arrowDown = Sprite("/Arrow_Down.RGB565");
+
+const int leftEdgePadding = 10;
+const int rightEdgePadding = 14 + leftEdgePadding;
 const int headerHeight = 40;
 const int rangeSpacing = 35;
 const int size1Height = 17;
 const int size2Height = 17 * 2;
 const int size1Spacing = 5;
 
+int height0, height1, height2, height3, height4, height5;
+
 bool initialLinesDrawn;
 struct timeval displayTimeStruct;
 
 void InitializeDisplayDefinitions()
 {
-    int leftEdgePadding = 10;
-    int rightEdgePadding = 14 + leftEdgePadding;
-    coolantTemperatureLabel.rect = Rect(leftEdgePadding, 0, displayWidth, headerHeight, Anchor::UpperLeft);
+    coolantTemperatureLabel.rect = Rect(leftEdgePadding + 30, 0, displayWidth, headerHeight, Anchor::MiddleLeft);
     timeLabel.rect = Rect(0, 0, displayWidth, headerHeight, Anchor::UpperCenter);
     timeLabel.textSize = 2;
-    ambientTemperatureLabel.rect = Rect(0, 0, displayWidth - rightEdgePadding, displayHeight, Anchor::UpperRight);
+    ambientTemperatureLabel.rect = Rect(0, 0, displayWidth - rightEdgePadding, headerHeight, Anchor::MiddleRight);
 
     rangeBestLabel.rect = Rect(0, headerHeight, displayWidth, rangeSpacing, Anchor::MiddleCenter);
     rangeAverageLabel.rect = Rect(0, headerHeight + rangeSpacing, displayWidth, rangeSpacing, Anchor::MiddleCenter);
@@ -53,11 +66,12 @@ void InitializeDisplayDefinitions()
 
     int width = displayWidth - 64;
     
-    int height0 = displayHeight - size1Spacing - 20;
-    int height1 = height0 - size1Spacing - size1Height;
-    int height2 = height1 - size1Spacing - size1Height;
-    int height3 = height2 - size1Spacing - size1Height;
-    int height4 = height3 - size1Spacing - size1Height;
+    height0 = displayHeight - size1Spacing - 20;
+    height1 = height0 - size1Spacing - size1Height;
+    height2 = height1 - size1Spacing - size1Height;
+    height3 = height2 - size1Spacing - size1Height;
+    height4 = height3 - size1Spacing - size1Height;
+    height5 = height4 - size1Spacing - size1Height;
 
     auxBatteryAmperageLabel.rect = Rect(leftEdgePadding, 0, displayWidth, height4, Anchor::LowerLeft);
     auxBatteryVoltageLabel.rect = Rect(leftEdgePadding, 0, displayWidth, height3, Anchor::LowerLeft);
@@ -93,7 +107,7 @@ void SetDefinitionsText()
 
     coolantTemperatureLabel.SetText("20 C");
     timeLabel.SetText(TimeToString(hours) + ":" + TimeToString(minutes));
-    ambientTemperatureLabel.SetText("8 C");
+    ambientTemperatureLabel.SetText("11 C");
 
     rangeBestLabel.SetText("130 km");
     rangeAverageLabel.SetText("100 km");
@@ -121,6 +135,37 @@ void SetDefinitionsText()
     if(!initialLinesDrawn)
     {
         initialLinesDrawn = true;
-        tft.writeFastHLine(0, headerHeight - 5, displayWidth, Display_Color_White);
+        tft.drawFastHLine(0, headerHeight - 2, displayWidth, Display_Color_White);
+
+        int rectTop = height4 - size1Height / 2 - size1Spacing - 2;
+        int rectHeight = 2 * size1Height + 3 * size1Spacing;
+        tft.drawRect(0, rectTop, 80, rectHeight, Display_Color_White);
+
+        int rectBottom = rectTop + rectHeight - 1;
+        int rectRight = 130;
+        tft.drawFastHLine(0, rectBottom, rectRight, Display_Color_White);
+        tft.drawFastVLine(rectRight, rectBottom, displayHeight - rectBottom, Display_Color_White);
+
+        ambientTempIcon.rect = Rect(0, 0, displayWidth - 75, headerHeight, Anchor::MiddleRight);
+        ambientTempIcon.Draw();
+
+        auxBatteryIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, height5 - 5, Anchor::LowerLeft);
+        auxBatteryIcon.Draw();
+
+        //chargeIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, height5, Anchor::LowerLeft);
+        //chargeIcon.Draw();
+
+        coolantIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, headerHeight, Anchor::MiddleLeft);
+        coolantIcon.Draw();
+
+        fuelIcon.rect = Rect(64, headerHeight + rangeSpacing - 5, displayWidth - 80, 40, Anchor::MiddleLeft);
+        fuelIcon.Draw();
+        arrowUp.rect = Rect(115, headerHeight - 3, displayWidth - 115, 40, Anchor::MiddleLeft);
+        arrowUp.Draw();
+        arrowDown.rect = Rect(115, headerHeight + 2 * rangeSpacing - 1, displayWidth - 115, 40, Anchor::MiddleLeft);
+        arrowDown.Draw();
+
+        tractionBatteryIcon.rect = Rect(0, 0, displayWidth - rightEdgePadding, height5, Anchor::LowerRight);
+        tractionBatteryIcon.Draw();
     }
 }

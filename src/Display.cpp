@@ -56,70 +56,14 @@ State currentState = State::DisplaySetup;
 Timer logoTimer = Timer(3);
 Timer timer = Timer(1);
 
-bool TryDisplayLogoGraphics(int &logoHeightOffset)
-{
-    logoHeightOffset = displayHeight / 2;
-
-    File fp = LittleFS.open("/logo.RGB565", "r");
-
-    if (!fp)
-    {
-        PrintSerialMessage("Can't display logo, missing logo.RGB565!");
-        return false;
-    }
-
-    size_t availableBytes = fp.available();
-
-    if (availableBytes == 0)
-    {
-        PrintSerialMessage("Can't display logo, 0 bytes!");
-        fp.close();
-        return false;
-    }
-
-    size_t bytesLeftInRam = ESP.getFreeHeap();
-    if (availableBytes >= bytesLeftInRam)
-    {
-        PrintSerialMessage("Can't display logo, not enough memory! Left:" + ToString(bytesLeftInRam) +
-                           ", needed: " + ToString(availableBytes));
-        fp.close();
-        return false;
-    }
-
-    PrintSerialMessage("Bytes left in RAM:" + ToString(bytesLeftInRam) +
-                       ", needed for logo: " + ToString(availableBytes));
-
-    uint32_t width, height;
-    fp.read((uint8_t *)&width, sizeof(uint32_t));
-    fp.read((uint8_t *)&height, sizeof(uint32_t));
-
-    availableBytes = fp.available();
-    uint16_t *RGB565Data = new uint16_t[availableBytes / sizeof(uint16_t)];
-    fp.read((uint8_t *)RGB565Data, availableBytes);
-    fp.close();
-
-    PrintSerialMessage("Logo is: " + ToString((size_t)width) + "x" + ToString((size_t)height));
-
-    int rectHeight = height + 4;
-    logoHeightOffset = rectHeight;
-    Rect logoRect = Rect(0, 0, displayWidth, rectHeight, width, height, Anchor::MiddleCenter);
-
-    int x, y;
-    logoRect.GetTransformedValues(x, y);
-    tft.drawRGBBitmap(x, y, RGB565Data, width, height);
-
-    delete RGB565Data;
-    return true;
-}
-
 void DisplayLogo()
 {
-    int logoHeightOffset;
-    TryDisplayLogoGraphics(logoHeightOffset);
+    logoIcon.rect = Rect(0, 0, displayWidth, displayHeight, Anchor::UpperCenter);
+    logoIcon.Draw();
 
     Label title;
     title.SetText("VOLKSWAGEN");
-    title.rect = Rect(0, logoHeightOffset, displayWidth, displayHeight - logoHeightOffset, Anchor::MiddleCenter);
+    title.rect = Rect(0, 150, displayWidth, displayHeight - 150, Anchor::MiddleCenter);
     title.Draw();
 }
 
