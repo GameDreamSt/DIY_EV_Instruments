@@ -1,6 +1,7 @@
 
 #include "Display.h"
 #include "Pinout.h"
+#include "Commands.h"
 
 #include "EVLib/SerialPrint.h"
 #include "EVLib/Timer.h"
@@ -24,6 +25,7 @@ using namespace std;
 int displayWidth;
 int displayHeight;
 bool initialized;
+bool displayOn;
 
 Adafruit_ST7789 tft = Adafruit_ST7789(&SPI, PIN_DISPLAY_CS, PIN_DISPLAY_DC, -1);
 
@@ -110,6 +112,7 @@ void TickDisplay()
         currentState = State::Logo;
         DisplayLogo();
         tft.enableDisplay(true);
+        displayOn = true;
         break;
 
     case State::Logo:
@@ -120,7 +123,13 @@ void TickDisplay()
         break;
 
     case State::Active:
-        if (!timer.HasTriggered())
+        if(commands::GetDisplayState() != displayOn)
+        {
+            displayOn = commands::GetDisplayState();
+            tft.enableDisplay(displayOn);
+        }
+
+        if (!timer.HasTriggered() || !displayOn)
             return;
         SetDefinitionsText();
         break;

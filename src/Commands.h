@@ -13,4 +13,7 @@ namespace commands
     void CommandReset();
     void CommandTogglePrintCANErrors();
     void CommandTogglePrintCANLogs();
+
+    void CommandToggleDisplay();
+    bool GetDisplayState();
 }

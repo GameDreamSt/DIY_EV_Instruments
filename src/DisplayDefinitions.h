@@ -117,7 +117,7 @@ void SetDefinitionsText()
     chargeTimePassedLabel.SetText("");
     chargeWattageLabel.SetText("");*/
 
-    consumption100KmLabel.SetText("100 km/Wh");
+    consumption100KmLabel.SetText("Wh/km");
     tripTextLabel.SetText("Trip");
     consumptionTripLabel.SetText("180");
     totalTextLabel.SetText("Total");

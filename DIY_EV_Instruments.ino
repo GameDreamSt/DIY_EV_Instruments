@@ -34,6 +34,7 @@ void setup()
     AddCommand(CommandPointer("reset", commands::CommandReset));
     AddCommand(CommandPointer("canerrors", commands::CommandTogglePrintCANErrors));
     AddCommand(CommandPointer("canlogs", commands::CommandTogglePrintCANLogs));
+    AddCommand(CommandPointer("toggledisplay", commands::CommandToggleDisplay));
 
     pinMode(PIN_COOLANT_LED, OUTPUT);
     pinMode(PIN_BATTERY_LED, OUTPUT);
