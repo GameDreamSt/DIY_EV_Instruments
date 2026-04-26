@@ -2,6 +2,7 @@
 #include "Display.h"
 #include "Pinout.h"
 #include "Commands.h"
+#include "CANCommunication.h"
 
 #include "EVLib/SerialPrint.h"
 #include "EVLib/Timer.h"

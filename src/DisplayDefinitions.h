@@ -105,9 +105,11 @@ void SetDefinitionsText()
     int minutes = (secondsTotal / 60) % 60;
     int hours = (secondsTotal / 3600) % 24;
 
-    coolantTemperatureLabel.SetText("20 C");
+    auto evData = GetEVData();
+
+    coolantTemperatureLabel.SetText(FloatToString(evData.GetMaxHeatspotTemperature(), 1) + " C");
     timeLabel.SetText(TimeToString(hours) + ":" + TimeToString(minutes));
-    ambientTemperatureLabel.SetText("11 C");
+    ambientTemperatureLabel.SetText(FloatToString(evData.GetMinHeatspotTemperature(), 1) + " C");
 
     rangeBestLabel.SetText("130 km");
     rangeAverageLabel.SetText("100 km");
@@ -126,11 +128,16 @@ void SetDefinitionsText()
     auxBatteryAmperageLabel.SetText("6.3 A");
     auxBatteryVoltageLabel.SetText("14.4 V");
 
-    tractionBatteryTemperatureLabel.SetText("18 C");
-    tractionBatteryWattageLabel.SetText("22.1 kW");
-    tractionBatteryVoltageLabel.SetText("232 V");
-    tractionBatterySOCLabel.SetText("23.6% SOC");
-    tractionBatteryCapacityLabel.SetText("16.2/24.0 kWh");
+    //tractionBatteryTemperatureLabel.SetText("18 C"); // BMS needed
+    tractionBatteryWattageLabel.SetText(FloatToString(evData.estimatedPowerKW, 1) + " kW"); // BMS needed, can estimate from torque and rpm, but it's unreliable
+    tractionBatteryVoltageLabel.SetText(FloatToString(evData.inverterVoltage, 0) + " V");
+
+    float socEstimateNaive = Remap01(evData.inverterVoltage, 210, 246);
+    tractionBatterySOCLabel.SetText(FloatToString(socEstimateNaive * 100, 1) + "% SOC");
+
+    float batteryPackCapacity = 11.8f; // kWh (8.2V * 30x * 60Ah * 80% deg)
+    float cellVoltageRatio = Remap01(evData.inverterVoltage / 30.0f, 7, 8.2f);
+    tractionBatteryCapacityLabel.SetText(FloatToString(cellVoltageRatio * batteryPackCapacity, 1) + "/" + FloatToString(batteryPackCapacity, 1) + " kWh");
 
     if(!initialLinesDrawn)
     {

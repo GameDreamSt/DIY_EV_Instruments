@@ -20,9 +20,9 @@
 #endif
 
 #ifndef Remap
-#define Remap(In, InMin, InMax, OutMin, OutMax) (OutMin + (In - InMin) * (OutMax - OutMin) / (InMax - InMin));
+#define Remap(In, InMin, InMax, OutMin, OutMax) (OutMin + (In - InMin) * (OutMax - OutMin) / (InMax - InMin))
 #endif
 
 #ifndef Remap01
-#define Remap01(In, InMin, InMax) ((In - InMin) / (InMax - InMin));
+#define Remap01(In, InMin, InMax) ((In - InMin) / (InMax - InMin))
 #endif
