@@ -4,6 +4,9 @@
 #include "EVLib/SerialPrint.h"
 #include "EVLib/Can.h"
 
+#include "time.h"
+#include "esp_sntp.h"
+
 using namespace std;
 
 namespace commands
@@ -113,5 +116,26 @@ namespace commands
     bool GetDisplayState()
     {
         return displayActive;
+    }
+
+    struct timeval timeSetVal;
+    struct timezone timezoneSet = {};
+    void CommandSetTime()
+    {
+        vector<string> parameters = *GetParameters();
+
+        if(parameters.size() < 2)
+        {
+            PrintSerialMessage("Need 2 parameters! Hours:Minutes");
+            return;
+        }
+
+        int hours = stoi(parameters[0]);
+        int minutes = stoi(parameters[1]);
+
+        timeSetVal.tv_sec = hours * 3600 + minutes * 60;
+        timeSetVal.tv_usec = timeSetVal.tv_sec * 1000000;
+
+        settimeofday(&timeSetVal, &timezoneSet);
     }
 }

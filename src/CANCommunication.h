@@ -13,32 +13,10 @@ struct EVData
     float inverterVoltage;
     float estimatedPowerKW;
 
-    int RPM;
-
-    /*float ambientTemperature;
-
-    float fuelRemainingRatio;
-
-    float tractionBatteryVoltage;
-    float tractionBatteryAmperage;
-    float tractionBatteryTemperature;
-    float tractionBatterySOC;
-
     float auxBatteryVoltage;
-    float auxBatteryAmperage;
+    float DCDC_Charge_Amps;
 
-    float rangeEstimateWorst;
-    float rangeEstimateAverage;
-    float rangeEstimateBest;
-
-    float tripWhPerKm;
-    float totalWhPerKm;
-
-    float chargeTimePassed;
-    float chargeTimeRemaining;
-    float chargeWattage;
-
-    int RPM;*/
+    int RPM;
 
     float GetMaxHeatspotTemperature()
     {

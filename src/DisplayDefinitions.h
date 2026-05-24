@@ -45,6 +45,13 @@ const int size1Spacing = 5;
 
 int height0, height1, height2, height3, height4, height5;
 
+// https://motoristo.com/tools/vehicle-speed-calculator?wheelSizeIn=14&tyreWidthMm=185&tyreHeightRatio=60&rpmMax=1000&finalDrive=3.941&gears=3.455%2C1.944%2C1.37%2C1.032%2C0.745
+// My trans is 020 ACH 1.6 diesel
+// We assume we're always using the 3rd gear
+const float rpmToKmh = 0.02017;
+float tripKm, historicalKm;
+float tripKJ, historicalKJ;
+
 bool initialLinesDrawn;
 struct timeval displayTimeStruct;
 
@@ -99,34 +106,38 @@ string TimeToString(int value)
 
 void SetDefinitionsText()
 {
+    auto evData = GetEVData();
+
+    float rpmToKms = rpmToKmh / 3600;
+    float kmTraveled = evData.RPM * rpmToKms * deltaTime;
+    tripKm += kmTraveled;
+    historicalKm += kmTraveled;
+
+    float kJConsumed = evData.estimatedPowerKW * deltaTime;
+    tripKJ += kJConsumed;
+    historicalKJ += kJConsumed;
+
+    float tripWhPerKm = (tripKJ / 3.6f) / tripKm;
+    float historicalWhPerKm = (historicalKJ / 3.6f) / historicalKm;
+
     gettimeofday(&displayTimeStruct, NULL);
     uint64_t secondsTotal = displayTimeStruct.tv_sec;
     int seconds = secondsTotal % 60;
     int minutes = (secondsTotal / 60) % 60;
     int hours = (secondsTotal / 3600) % 24;
 
-    auto evData = GetEVData();
-
     coolantTemperatureLabel.SetText(FloatToString(evData.GetMaxHeatspotTemperature(), 1) + " C");
     timeLabel.SetText(TimeToString(hours) + ":" + TimeToString(minutes));
     ambientTemperatureLabel.SetText(FloatToString(evData.GetMinHeatspotTemperature(), 1) + " C");
 
-    rangeBestLabel.SetText("130 km");
-    rangeAverageLabel.SetText("100 km");
-    rangeWorstLabel.SetText("60 km");
-
-    /*chargeTimeLeftLabel.SetText("");
-    chargeTimePassedLabel.SetText("");
-    chargeWattageLabel.SetText("");*/
-
     consumption100KmLabel.SetText("Wh/km");
     tripTextLabel.SetText("Trip");
-    consumptionTripLabel.SetText("180");
+    consumptionTripLabel.SetText(FloatToString(tripWhPerKm, 0));
     totalTextLabel.SetText("Total");
-    consumptionTotalLabel.SetText("130");
+    consumptionTotalLabel.SetText(FloatToString(historicalWhPerKm, 0));
 
-    auxBatteryAmperageLabel.SetText("6.3 A");
-    auxBatteryVoltageLabel.SetText("14.4 V");
+    auxBatteryAmperageLabel.SetText(FloatToString(evData.DCDC_Charge_Amps, 1) + " A");
+    auxBatteryVoltageLabel.SetText(FloatToString(evData.auxBatteryVoltage, 1) + " V");
 
     //tractionBatteryTemperatureLabel.SetText("18 C"); // BMS needed
     tractionBatteryWattageLabel.SetText(FloatToString(evData.estimatedPowerKW, 1) + " kW"); // BMS needed, can estimate from torque and rpm, but it's unreliable
@@ -137,7 +148,19 @@ void SetDefinitionsText()
 
     float batteryPackCapacity = 11.8f; // kWh (8.2V * 30x * 60Ah * 80% deg)
     float cellVoltageRatio = Remap01(evData.inverterVoltage / 30.0f, 7, 8.2f);
-    tractionBatteryCapacityLabel.SetText(FloatToString(cellVoltageRatio * batteryPackCapacity, 1) + "/" + FloatToString(batteryPackCapacity, 1) + " kWh");
+    float currentkWh = cellVoltageRatio * batteryPackCapacity;
+    tractionBatteryCapacityLabel.SetText(FloatToString(currentkWh, 1) + "/" + FloatToString(batteryPackCapacity, 1) + " kWh");
+
+    float highRange = currentkWh * 10; // 100 Wh/km
+    float midRange = currentkWh * 1000 / historicalWhPerKm;
+    float lowRange = currentkWh * 5; // 200 Wh/km
+    rangeBestLabel.SetText(FloatToString(highRange, 0) + " km");
+    rangeAverageLabel.SetText(FloatToString(midRange, 0) + " km");
+    rangeWorstLabel.SetText(FloatToString(lowRange, 0) + " km");
+
+    /*chargeTimeLeftLabel.SetText("");
+    chargeTimePassedLabel.SetText("");
+    chargeWattageLabel.SetText("");*/
 
     if(!initialLinesDrawn)
     {

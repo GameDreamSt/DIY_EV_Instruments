@@ -6,6 +6,7 @@
 
 #include "EVLib/SerialPrint.h"
 #include "EVLib/Timer.h"
+#include "EVLib/EVTime.h"
 
 #include "Display/Adafruit_GFX.h"
 #include "Display/Adafruit_ST7789.h"

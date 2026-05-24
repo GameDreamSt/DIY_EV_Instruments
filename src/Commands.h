@@ -16,4 +16,6 @@ namespace commands
 
     void CommandToggleDisplay();
     bool GetDisplayState();
+
+    void CommandSetTime();
 }

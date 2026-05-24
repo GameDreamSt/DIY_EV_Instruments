@@ -128,6 +128,13 @@ void TickCAN()
     case MsgID::RcvOBC_DCDC_Status:
         if(inFrameSize < 8)
            { PrintCANDataLengthFailure(canID, 8, inFrameSize);  return; }
+
+        evData.auxBatteryVoltage = (inFrame[0] << 8) | inFrame[1];
+        evData.auxBatteryVoltage *= 0.01f;
+
+        evData.DCDC_Charge_Amps = (inFrame[2] << 8) | inFrame[3];
+        evData.DCDC_Charge_Amps *= 0.1f;
+
         evData.DCDC_Temperature = inFrame[4] - 40;
         evData.DCDC_Temperature = Max(evData.DCDC_Temperature, inFrame[5] - 40);
         evData.DCDC_Temperature = Max(evData.DCDC_Temperature, inFrame[6] - 40);
