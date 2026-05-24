@@ -55,6 +55,49 @@ float tripKJ, historicalKJ;
 bool initialLinesDrawn;
 struct timeval displayTimeStruct;
 
+bool isInChargingMode;
+bool forcedChargeMode;
+float secondsCharging;
+
+void SetChargeMode(bool var, bool forced)
+{
+    if(var == isInChargingMode)
+        return;
+    isInChargingMode = var;
+    if(var && forced)
+        forcedChargeMode = forced;
+    else if(!var && forced)
+        forcedChargeMode = false;
+    
+    if(var)
+    {
+        secondsCharging = 0;
+        rangeBestLabel.Hide();
+        rangeAverageLabel.Hide();
+        rangeWorstLabel.Hide();
+        arrowUp.Hide();
+        arrowDown.Hide();
+        fuelIcon.Hide();
+        chargeIcon.Draw();
+        chargeTimeLeftLabel.Draw();
+        chargeTimePassedLabel.Draw();
+        chargeWattageLabel.Draw();
+    }
+    else
+    {
+        chargeIcon.Hide();
+        chargeTimeLeftLabel.Hide();
+        chargeTimePassedLabel.Hide();
+        chargeWattageLabel.Hide();
+        arrowUp.Draw();
+        arrowDown.Draw();
+        fuelIcon.Draw();
+        rangeBestLabel.Draw();
+        rangeAverageLabel.Draw();
+        rangeWorstLabel.Draw();
+    }
+}
+
 void InitializeDisplayDefinitions()
 {
     coolantTemperatureLabel.rect = Rect(leftEdgePadding + 30, 0, displayWidth, headerHeight, Anchor::MiddleLeft);
@@ -69,7 +112,7 @@ void InitializeDisplayDefinitions()
 
     chargeTimeLeftLabel.rect = Rect(0, headerHeight + size2Height, displayWidth, size2Height, Anchor::MiddleCenter);
     chargeTimePassedLabel.rect = Rect(0, headerHeight + 2 * size2Height, displayWidth, size1Height, Anchor::MiddleCenter);
-    chargeWattageLabel.rect = Rect(0, headerHeight + 2 * size2Height + size1Height, displayWidth, size1Height, Anchor::MiddleCenter);
+    chargeWattageLabel.rect = Rect(0, headerHeight + 2 * size2Height + size1Height + 8, displayWidth, size1Height, Anchor::MiddleCenter);
 
     int width = displayWidth - 64;
     
@@ -104,21 +147,23 @@ string TimeToString(int value)
     return ToString(value);
 }
 
-void SetDefinitionsText()
+void SetDefinitionsText(float timePassed)
 {
     auto evData = GetEVData();
 
+    SetChargeMode(evData.chargeWattage > 0, false);
+
     float rpmToKms = rpmToKmh / 3600;
-    float kmTraveled = evData.RPM * rpmToKms * deltaTime;
+    float kmTraveled = evData.RPM * rpmToKms * timePassed;
     tripKm += kmTraveled;
     historicalKm += kmTraveled;
 
-    float kJConsumed = evData.estimatedPowerKW * deltaTime;
+    float kJConsumed = evData.estimatedPowerKW * timePassed;
     tripKJ += kJConsumed;
     historicalKJ += kJConsumed;
 
-    float tripWhPerKm = (tripKJ / 3.6f) / tripKm;
-    float historicalWhPerKm = (historicalKJ / 3.6f) / historicalKm;
+    float tripWhPerKm = tripKm > 1 ? (tripKJ / 3.6f) / tripKm : 0;
+    float historicalWhPerKm = historicalKm > 1 ? (historicalKJ / 3.6f) / historicalKm : 0;
 
     gettimeofday(&displayTimeStruct, NULL);
     uint64_t secondsTotal = displayTimeStruct.tv_sec;
@@ -126,9 +171,9 @@ void SetDefinitionsText()
     int minutes = (secondsTotal / 60) % 60;
     int hours = (secondsTotal / 3600) % 24;
 
-    coolantTemperatureLabel.SetText(FloatToString(evData.GetMaxHeatspotTemperature(), 1) + " C");
+    coolantTemperatureLabel.SetText(FloatToString(evData.GetMaxHeatspotTemperature(), 0) + " C");
     timeLabel.SetText(TimeToString(hours) + ":" + TimeToString(minutes));
-    ambientTemperatureLabel.SetText(FloatToString(evData.GetMinHeatspotTemperature(), 1) + " C");
+    ambientTemperatureLabel.SetText(FloatToString(evData.GetMinHeatspotTemperature(), 0) + " C");
 
     consumption100KmLabel.SetText("Wh/km");
     tripTextLabel.SetText("Trip");
@@ -143,24 +188,43 @@ void SetDefinitionsText()
     tractionBatteryWattageLabel.SetText(FloatToString(evData.estimatedPowerKW, 1) + " kW"); // BMS needed, can estimate from torque and rpm, but it's unreliable
     tractionBatteryVoltageLabel.SetText(FloatToString(evData.inverterVoltage, 0) + " V");
 
-    float socEstimateNaive = Remap01(evData.inverterVoltage, 210, 246);
+    float socEstimateNaive = Remap01Clamped(evData.inverterVoltage, 210, 246);
     tractionBatterySOCLabel.SetText(FloatToString(socEstimateNaive * 100, 1) + "% SOC");
 
     float batteryPackCapacity = 11.8f; // kWh (8.2V * 30x * 60Ah * 80% deg)
-    float cellVoltageRatio = Remap01(evData.inverterVoltage / 30.0f, 7, 8.2f);
+    float cellVoltageRatio = Remap01Clamped(evData.inverterVoltage / 30.0f, 7, 8.2f);
     float currentkWh = cellVoltageRatio * batteryPackCapacity;
     tractionBatteryCapacityLabel.SetText(FloatToString(currentkWh, 1) + "/" + FloatToString(batteryPackCapacity, 1) + " kWh");
 
-    float highRange = currentkWh * 10; // 100 Wh/km
-    float midRange = currentkWh * 1000 / historicalWhPerKm;
-    float lowRange = currentkWh * 5; // 200 Wh/km
-    rangeBestLabel.SetText(FloatToString(highRange, 0) + " km");
-    rangeAverageLabel.SetText(FloatToString(midRange, 0) + " km");
-    rangeWorstLabel.SetText(FloatToString(lowRange, 0) + " km");
+    if(isInChargingMode)
+    {
+        secondsCharging += timePassed;
+        float kwhLeft = batteryPackCapacity - currentkWh;
+        int timeLeft = evData.chargeWattage > 1 ? (int)(kwhLeft * 1000 * 3600 / evData.chargeWattage) : 0;
 
-    /*chargeTimeLeftLabel.SetText("");
-    chargeTimePassedLabel.SetText("");
-    chargeWattageLabel.SetText("");*/
+        seconds = timeLeft % 60;
+        minutes = (timeLeft / 60) % 60;
+        hours = (timeLeft / 3600) % 24;
+
+        chargeTimeLeftLabel.SetText("-T: " + TimeToString(hours) + ":" + TimeToString(minutes) + ":" + TimeToString(seconds));
+
+        int chargingTimeInt = secondsCharging;
+        seconds = chargingTimeInt % 60;
+        minutes = (chargingTimeInt / 60) % 60;
+        hours = (chargingTimeInt / 3600) % 24;
+
+        chargeTimePassedLabel.SetText("+T: " + TimeToString(hours) + ":" + TimeToString(minutes) + ":" + TimeToString(seconds));
+        chargeWattageLabel.SetText(FloatToString(evData.chargeWattage, 0) + " W");
+    }
+    else
+    {
+        float highRange = currentkWh * 10; // 100 Wh/km
+        float midRange = historicalWhPerKm > 1 ? currentkWh * 1000 / historicalWhPerKm : currentkWh * 7.5f;
+        float lowRange = currentkWh * 5; // 200 Wh/km
+        rangeBestLabel.SetText(FloatToString(highRange, 0) + " km");
+        rangeAverageLabel.SetText(FloatToString(midRange, 0) + " km");
+        rangeWorstLabel.SetText(FloatToString(lowRange, 0) + " km");
+    }
 
     if(!initialLinesDrawn)
     {
@@ -182,8 +246,7 @@ void SetDefinitionsText()
         auxBatteryIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, height5 - 5, Anchor::LowerLeft);
         auxBatteryIcon.Draw();
 
-        //chargeIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, height5, Anchor::LowerLeft);
-        //chargeIcon.Draw();
+        chargeIcon.rect = Rect(0, 50, displayWidth, displayHeight, Anchor::UpperCenter);
 
         coolantIcon.rect = Rect(leftEdgePadding, 0, displayWidth - leftEdgePadding, headerHeight, Anchor::MiddleLeft);
         coolantIcon.Draw();

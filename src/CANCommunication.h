@@ -16,6 +16,8 @@ struct EVData
     float auxBatteryVoltage;
     float DCDC_Charge_Amps;
 
+    float chargeWattage;
+
     int RPM;
 
     float GetMaxHeatspotTemperature()

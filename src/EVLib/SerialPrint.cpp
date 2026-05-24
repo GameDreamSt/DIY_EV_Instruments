@@ -33,6 +33,9 @@ void PrintSerialMessage(string message, int intData)
 
 string FloatToString(float var, int precision)
 {
+    if(precision <= 0)
+        return to_string((long)var);
+
     float multiplier = pow(10, precision);
     string wholeNum = to_string((long)var);
 

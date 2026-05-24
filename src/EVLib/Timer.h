@@ -8,4 +8,5 @@ class Timer
   public:
     Timer(float fireInterval);
     bool HasTriggered();
+    float GetFireInterval() { return triggerTime; }
 };

@@ -94,16 +94,22 @@ struct Label
   public:
     Rect rect;
     uint8_t textSize;
+    bool hidden;
 
     Label() : text(""), rect(0, 0, 0, 0, Anchor::MiddleCenter)
     {
         ox = oy = ow = oh = 0;
         textSize = 1;
     }
+    
+    void Hide()
+    {
+        tft.fillRect(ox, oy, ow, oh, Display_Backround_Color);
+    }
 
     void Draw()
     {
-        tft.fillRect(ox, oy, ow, oh, Display_Backround_Color);
+        Hide();
 
         int16_t x, y;
         uint16_t w, h;
@@ -150,10 +156,17 @@ struct Sprite
 {
 private:
     string path;
+    int ox, oy, ow, oh;
+
 public:
     Rect rect;
 
     Sprite(string path) : rect(0, 0, 0, 0, Anchor::MiddleCenter), path(path) {}
+
+    void Hide()
+    {
+        tft.fillRect(ox, oy, ow, oh, Display_Backround_Color);
+    }
 
     bool Draw()
     {
@@ -199,6 +212,10 @@ public:
 
         int x, y;
         rect.GetTransformedValues(x, y);
+        ox = x;
+        oy = y;
+        ow = width;
+        oh = height;
         tft.drawRGBBitmap(x, y, RGB565Data, width, height);
 
         delete RGB565Data;

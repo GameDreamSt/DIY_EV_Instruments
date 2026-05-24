@@ -5,6 +5,7 @@
 #include "CANCommunication.h"
 
 #include "EVLib/SerialPrint.h"
+#include "EVLib/SerialReader.h"
 #include "EVLib/Timer.h"
 #include "EVLib/EVTime.h"
 
@@ -53,6 +54,8 @@ enum State
     Active,
 };
 
+bool chargeForced;
+
 #include "DisplayUtility.h"
 #include "DisplayDefinitions.h"
 
@@ -71,9 +74,29 @@ void DisplayLogo()
     title.Draw();
 }
 
+void CommandChargeStateOverride()
+{
+    chargeForced = !chargeForced;
+    SetChargeMode(chargeForced, true);
+}
+
+void CommandToggleDisplay()
+{
+    displayOn = !displayOn;
+    tft.enableDisplay(displayOn);
+}
+
+void SetupCommands()
+{
+    AddCommand(CommandPointer("toggledisplay", CommandToggleDisplay));
+    AddCommand(CommandPointer("forcecharge", CommandChargeStateOverride));
+}
+
 void InitializeDisplay()
 {
     PrintSerialMessage("Initializing display");
+
+    SetupCommands();
 
     // using a 2.0" 320x240 TFT:
     tft.init(240, 320); // Init ST7789 320x240
@@ -125,15 +148,9 @@ void TickDisplay()
         break;
 
     case State::Active:
-        if(commands::GetDisplayState() != displayOn)
-        {
-            displayOn = commands::GetDisplayState();
-            tft.enableDisplay(displayOn);
-        }
-
         if (!timer.HasTriggered() || !displayOn)
             return;
-        SetDefinitionsText();
+        SetDefinitionsText(timer.GetFireInterval());
         break;
     }
 }

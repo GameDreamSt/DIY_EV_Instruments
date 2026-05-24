@@ -145,6 +145,8 @@ void TickCAN()
             { PrintCANDataLengthFailure(canID, 6, inFrameSize);  return; }
         evData.OBC_Temperature1 = inFrame[3] - 40;
         evData.OBC_Temperature1 = Max(evData.OBC_Temperature1, inFrame[4] - 40);
+
+        evData.chargeWattage = inFrame[1] * inFrame[2] * 0.1f;
         break;
 
     case MsgID::RcvOBC_Status2:

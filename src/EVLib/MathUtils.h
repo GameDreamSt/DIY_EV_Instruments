@@ -26,3 +26,7 @@
 #ifndef Remap01
 #define Remap01(In, InMin, InMax) ((In - InMin) / (InMax - InMin))
 #endif
+
+#ifndef Remap01Clamped
+#define Remap01Clamped(In, InMin, InMax) Saturate(((In - InMin) / (InMax - InMin)))
+#endif

@@ -107,17 +107,6 @@ namespace commands
         PrintSerialMessage(CAN::logCAN ? "CAN debug enabled" : "CAN debug disabled");
     }
 
-    bool displayActive = true;
-    void CommandToggleDisplay()
-    {
-        displayActive = !displayActive;
-    }
-
-    bool GetDisplayState()
-    {
-        return displayActive;
-    }
-
     struct timeval timeSetVal;
     struct timezone timezoneSet = {};
     void CommandSetTime()

@@ -15,7 +15,6 @@ namespace commands
     void CommandTogglePrintCANLogs();
 
     void CommandToggleDisplay();
-    bool GetDisplayState();
 
     void CommandSetTime();
 }
