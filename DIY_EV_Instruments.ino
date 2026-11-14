@@ -65,7 +65,7 @@ void loop()
     TickSerialReader();
     TickSerialWriter();
     TickDisplay();
-    TickLEDs();
+    //TickLEDs();
     TickGauges();
     TickAudio();
 }

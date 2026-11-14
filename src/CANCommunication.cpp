@@ -74,7 +74,7 @@ void TickCAN()
    if (can == nullptr) // Lazy init so the upload process doesn't hang up
         can = new CAN(PIN_CAN_CS);
 
-    if(canTestTimer.HasTriggered())
+    /*if(canTestTimer.HasTriggered())
     {
         can_frame testFrame;
         testFrame.can_id = 2;
@@ -84,7 +84,7 @@ void TickCAN()
             testFrame.data[i] = i + 1;
 
         can->Transmit(testFrame);
-    }
+    }*/
 
     if (!can->GetCanData(recvFrame))
         return;
