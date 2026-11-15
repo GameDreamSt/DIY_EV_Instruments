@@ -20,6 +20,11 @@ struct EVData
 
     int RPM;
 
+    bool DCDC_Failed()
+    {
+        return auxBatteryVoltage < 12;
+    }
+
     float GetMaxHeatspotTemperature()
     {
         float temp = motorTemperature;

@@ -1,0 +1,3 @@
+
+void InitializeLEDs();
+void TickLEDs();

@@ -10,15 +10,11 @@
 #include "src/Pinout.h"
 #include "src/CANCommunication.h"
 #include "src/Audio.h"
+#include "src/LEDPanel.h"
 
 #include "FS.h"
 #include <LittleFS.h>
 #include "src/FileUtility.h"
-
-#define FORMAT_LITTLEFS_IF_FAILED true
-
-Timer ledTimer = Timer(2);
-bool ledsActive;
 
 void setup()
 {
@@ -32,12 +28,10 @@ void setup()
     AddCommand(CommandPointer("canerrors", commands::CommandTogglePrintCANErrors));
     AddCommand(CommandPointer("canlogs", commands::CommandTogglePrintCANLogs));
 
-    pinMode(PIN_COOLANT_LED, OUTPUT);
-    pinMode(PIN_BATTERY_LED, OUTPUT);
-
+    InitializeLEDs();
     InitializeGauges();
 
-    if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED))
+    if (!LittleFS.begin(false))
     {
         Serial.println("LittleFS Mount Failed");
         return;
@@ -55,18 +49,7 @@ void loop()
     TickSerialReader();
     TickSerialWriter();
     TickDisplay();
-    //TickLEDs();
+    TickLEDs();
     TickGauges();
     TickAudio();
-}
-
-void TickLEDs()
-{
-    if (!ledTimer.HasTriggered())
-        return;
-
-    ledsActive = !ledsActive;
-
-    digitalWrite(PIN_COOLANT_LED, ledsActive);
-    digitalWrite(PIN_BATTERY_LED, ledsActive);
 }
