@@ -18,10 +18,7 @@
 #define FORMAT_LITTLEFS_IF_FAILED true
 
 Timer ledTimer = Timer(2);
-Timer gaugeTimer = Timer(1);
 bool ledsActive;
-
-Gauge tachGauge, coolantGauge, fuelGauge;
 
 void setup()
 {
@@ -38,14 +35,7 @@ void setup()
     pinMode(PIN_COOLANT_LED, OUTPUT);
     pinMode(PIN_BATTERY_LED, OUTPUT);
 
-    tachGauge = Gauge(PIN_TACH, CHANNEL_TACH);
-    tachGauge.SetCalibration(CHANNEL_MAX_TACH);
-    
-    coolantGauge = Gauge(PIN_COOLANT_GAUGE, CHANNEL_COOL);
-    coolantGauge.SetCalibration(CHANNEL_MAX_COOL);
-
-    fuelGauge = Gauge(PIN_FUEL_GAUGE, CHANNEL_FUEL);
-    fuelGauge.SetCalibration(CHANNEL_MAX_FUEL);
+    InitializeGauges();
 
     if (!LittleFS.begin(FORMAT_LITTLEFS_IF_FAILED))
     {
@@ -79,26 +69,4 @@ void TickLEDs()
 
     digitalWrite(PIN_COOLANT_LED, ledsActive);
     digitalWrite(PIN_BATTERY_LED, ledsActive);
-}
-
-void TickGauges()
-{
-    if(!gaugeTimer.HasTriggered())
-        return;
-
-    float value = 0;
-    if (commands::TryGetGaugeCalibration(CHANNEL_TACH, value))
-        tachGauge.SetCalibration(value);
-    if (commands::TryGetGaugeValueRatio(CHANNEL_TACH, value))
-        tachGauge.SetValueRatio(value);
-
-    if (commands::TryGetGaugeCalibration(CHANNEL_COOL, value))
-        coolantGauge.SetCalibration(value);
-    if (commands::TryGetGaugeValueRatio(CHANNEL_COOL, value))
-        coolantGauge.SetValueRatio(value);
-
-    if (commands::TryGetGaugeCalibration(CHANNEL_FUEL, value))
-        fuelGauge.SetCalibration(value);
-    if (commands::TryGetGaugeValueRatio(CHANNEL_FUEL, value))
-        fuelGauge.SetValueRatio(value);
 }

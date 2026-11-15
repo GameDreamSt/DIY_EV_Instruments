@@ -49,6 +49,11 @@ struct EVData
         temp = Max(temp, Remap01(OBC_Temperature2, 0, 70));
         return temp;
     }
+
+    float GetSOC01()
+    {
+        return Remap01Clamped(inverterVoltage, 210, 246);
+    }
 };
 
 void TickCAN();
